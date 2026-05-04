@@ -25,14 +25,22 @@ const initDb = async () => {
 initDb();
 
 // Routes
-// Fetch all tasks and display in a simple HTML layout
 app.get('/', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM tasks ORDER BY created_at DESC');
-    let rows = result.rows.map(t => `<li>${t.content} <small>(${t.created_at.toLocaleString()})</small></li>`).join('');
+    
+    // Create list items with a "Delete" button for each task
+    let rows = result.rows.map(t => `
+      <li>
+        ${t.content} 
+        <form action="/delete/${t.id}" method="POST" style="display:inline;">
+          <button type="submit" style="color:red; margin-left:10px;">Delete</button>
+        </form>
+      </li>
+    `).join('');
     
     res.send(`
-      <h1>Task Manager</h1>
+      <h1>Data-Driven Task App</h1>
       <form action="/add" method="POST">
         <input type="text" name="task" placeholder="Enter a new task" required>
         <button type="submit">Add to Database</button>
@@ -40,18 +48,27 @@ app.get('/', async (req, res) => {
       <ul>${rows}</ul>
     `);
   } catch (err) {
-    res.status(500).send("Database Error: " + err.message);
+    res.status(500).send("Database Error");
   }
 });
 
 // Save a new task to the database
 app.post('/add', async (req, res) => {
   const { task } = req.body;
+  const result = await pool.query('INSERT INTO tasks (content) VALUES ($1) RETURNING *', [task]);
+  console.log("DATABASE LOG: New entry added ->", result.rows[0]); 
+  res.redirect('/');
+});
+
+app.post('/delete/:id', async (req, res) => {
+  const taskId = req.params.id; // Get the ID from the URL
   try {
-    await pool.query('INSERT INTO tasks (content) VALUES ($1)', [task]);
-    res.redirect('/');
+    await pool.query('DELETE FROM tasks WHERE id = $1', [taskId]);
+    console.log(`Deleted task with ID: ${taskId}`);
+    res.redirect('/'); // Refresh the page to show the updated list
   } catch (err) {
-    res.status(500).send("Error saving to DB");
+    console.error(err);
+    res.status(500).send("Error deleting from DB");
   }
 });
 

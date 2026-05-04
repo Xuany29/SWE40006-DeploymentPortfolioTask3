@@ -40,7 +40,7 @@ app.get('/', async (req, res) => {
     `).join('');
     
     res.send(`
-      <h1>Data-Driven Task App</h1>
+      <h1>Task Manager</h1>
       <form action="/add" method="POST">
         <input type="text" name="task" placeholder="Enter a new task" required>
         <button type="submit">Add to Database</button>

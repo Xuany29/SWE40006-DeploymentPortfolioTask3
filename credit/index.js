@@ -5,7 +5,7 @@ const app = express();
 
 // Home route
 app.get("/", (req, res) => {
-  res.send("Hello World!!!");
+  res.send("Update to test autodeploy");
 });
 
 // Test environment variable
